@@ -195,9 +195,104 @@
                     echo '<div class="mt-4">Erro ao processar a consulta: Método de requisição inválido.</div>';
                 }
 
-                // Fechar a conexão com o banco de dados
-                $conn->close();
                 ?>
+
+<div class="container">
+    <h2>Tabela de Consulta de Cursos</h2>
+    <br>
+
+    <!-- Tabela de Consulta -->
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nome</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php
+            // Conexão com o banco de dados
+            $servername = "localhost";
+            $username = "root";
+            $password = "";
+            $database = "couto_para_form";
+            $port = "3306";
+            $conn = new mysqli($servername, $username, $password, $database, $port);
+
+            // Verifica se a conexão ocorreu com sucesso
+            if ($conn->connect_error) {
+                die("Erro na conexão com o banco de dados: " . $conn->connect_error);
+            }
+
+            // Verifica se o formulário de cadastro foi enviado
+            if ($_SERVER["REQUEST_METHOD"] === "POST") {
+                // Verifica se os campos foram preenchidos
+                if (!empty($_POST["id"]) && !empty($_POST["nome"])) {
+                    $id = $_POST["id"];
+                    $nome = $_POST["nome"];
+
+                    // Insere o novo registro na tabela curso_principal
+                    $sql = "INSERT INTO curso_principal (id, nome) VALUES ('$id', '$nome')";
+                    if ($conn->query($sql) === TRUE) {
+                        echo "<div class='alert alert-success'>Registro cadastrado com sucesso.</div>";
+                    } else {
+                        echo "<div class='alert alert-danger'>Erro ao cadastrar o registro: " . $conn->error . "</div>";
+                    }
+                }
+            }
+
+            // Verifica se o parâmetro ID está presente na URL para exclusão do registro
+            if (isset($_GET["id"])) {
+                $id = $_GET["id"];
+
+                // Exclui o registro da tabela curso_principal
+                $sql = "DELETE FROM curso_principal WHERE id = $id";
+                if ($conn->query($sql) === TRUE) {
+                    echo "<div class='alert alert-success'>Registro excluído com sucesso.</div>";
+                } else {
+                    echo "<div class='alert alert-danger'>Erro ao excluir o registro: " . $conn->error . "</div>";
+                }
+            }
+
+            // Consulta os registros da tabela curso_principal
+            $sql = "SELECT id, nome FROM curso_principal";
+            $result = $conn->query($sql);
+
+            if ($result->num_rows > 0) {
+                while ($row = $result->fetch_assoc()) {
+                    echo "<tr>";
+                    echo "<td>".$row["id"]."</td>";
+                    echo "<td>".$row["nome"]."</td>";
+                    echo "<td><a href='?id=".$row["id"]."' class='btn btn-danger btn-sm'>Excluir</a></td>";
+                    echo "</tr>";
+                }
+            } else {
+                echo "<tr><td colspan='3'>Nenhum registro encontrado.</td></tr>";
+            }
+
+            // Fecha a conexão com o banco de dados
+            $conn->close();
+            ?>
+        </tbody>
+    </table>
+
+    <br>
+
+    <!-- Formulário de Cadastro -->
+    <h3>Cadastrar Novo Curso</h3>
+    <form action="" method="POST">
+        <div class="form-group">
+            <label for="id">ID do Curso:</label>
+            <input type="text" class="form-control" id="id" name="id" required>
+        </div>
+        <div class="form-group">
+            <label for="nome">Nome do Curso:</label>
+            <input type="text" class="form-control" id="nome" name="nome" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Cadastrar</button>
+    </form>
+</div>
 
             </div>
         </div>
