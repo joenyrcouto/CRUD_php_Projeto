@@ -198,6 +198,7 @@
                 ?>
 
 <div class="container">
+    <br>
     <h2>Tabela de Consulta de Cursos</h2>
     <br>
 
@@ -243,17 +244,27 @@
             }
 
             // Verifica se o parâmetro ID está presente na URL para exclusão do registro
-            if (isset($_GET["id"])) {
-                $id = $_GET["id"];
+if (isset($_GET["id"])) {
+    $id = $_GET["id"];
 
-                // Exclui o registro da tabela curso_principal
-                $sql = "DELETE FROM curso_principal WHERE id = $id";
-                if ($conn->query($sql) === TRUE) {
-                    echo "<div class='alert alert-success'>Registro excluído com sucesso.</div>";
-                } else {
-                    echo "<div class='alert alert-danger'>Erro ao excluir o registro: " . $conn->error . "</div>";
-                }
-            }
+    // Verifica se o curso está relacionado a algum aluno
+    $sqlCheck = "SELECT COUNT(*) as count FROM aluno WHERE curso = $id";
+    $resultCheck = $conn->query($sqlCheck);
+    $rowCheck = $resultCheck->fetch_assoc();
+    $count = $rowCheck['count'];
+
+    if ($count > 0) {
+        echo "<div class='alert alert-warning'>Não é possível excluir o curso, pois existem alunos relacionados a ele.</div>";
+    } else {
+        // Exclui o registro da tabela curso_principal
+        $sql = "DELETE FROM curso_principal WHERE id = $id";
+        if ($conn->query($sql) === TRUE) {
+            echo "<div class='alert alert-success'>Registro excluído com sucesso.</div>";
+        } else {
+            echo "<div class='alert alert-danger'>Erro ao excluir o registro: " . $conn->error . "</div>";
+        }
+    }
+}
 
             // Consulta os registros da tabela curso_principal
             $sql = "SELECT id, nome FROM curso_principal";
@@ -264,7 +275,7 @@
                     echo "<tr>";
                     echo "<td>".$row["id"]."</td>";
                     echo "<td>".$row["nome"]."</td>";
-                    echo "<td><a href='?id=".$row["id"]."' class='btn btn-danger btn-sm'>Excluir</a></td>";
+                    echo '<td><button class="btn btn-danger" data-curso="' . $row["nome"] . '">Excluir</button></td>';
                     echo "</tr>";
                 }
             } else {
@@ -281,6 +292,7 @@
 
     <!-- Formulário de Cadastro -->
     <h3>Cadastrar Novo Curso</h3>
+    <br>
     <form action="" method="POST">
         <div class="form-group">
             <label for="id">ID do Curso:</label>
@@ -300,25 +312,32 @@
 
     <script>
         // Capturar todos os botões de exclusão
-        var btnExcluir = document.querySelectorAll('.btn-danger');
+    var btnExcluir = document.querySelectorAll('.btn-danger');
 
-        // Adicionar um evento de clique para cada botão
-        btnExcluir.forEach(function(btn) {
-            btn.addEventListener('click', function() {
-                // Obter o nome do aluno a ser excluído do atributo "data-aluno"
-                var aluno = this.getAttribute('data-aluno');
+// Adicionar um evento de clique para cada botão
+btnExcluir.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        // Obter o nome do aluno ou curso a ser excluído do atributo "data-aluno" ou "data-curso"
+        var aluno = this.getAttribute('data-aluno');
+        var curso = this.getAttribute('data-curso');
 
-                // Confirmar a exclusão do aluno
-                var confirmacao = confirm('Tem certeza que deseja excluir o aluno ' + aluno + '?');
+        // Verificar se é aluno ou curso
+        var mensagem = '';
+        if (aluno) {
+            mensagem = 'Tem certeza que deseja excluir o aluno ' + aluno + '?';
+        } else if (curso) {
+            mensagem = 'Tem certeza que deseja excluir o curso ' + curso + '?';
+        }
 
-                // Se o usuário confirmar a exclusão, redirecionar para a página de exclusão
-                if (confirmacao) {
-                    window.location.href = 'erase.php?aluno=' + encodeURIComponent(aluno);
-                    // Recarregar a página principal
-                    window.location.reload();
-                }
-            });
-        });
+        // Confirmar a exclusão do aluno ou curso
+        var confirmacao = confirm(mensagem);
+
+        // Se o usuário confirmar a exclusão, redirecionar para a página de exclusão
+        if (confirmacao) {
+            // ...
+        }
+    });
+});
     </script>
 </body>
 </html>
