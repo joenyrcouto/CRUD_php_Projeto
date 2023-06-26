@@ -20,17 +20,23 @@
             max-width: 97%px;
             margin: 0 auto;
         }
+        body {
+            background-image: url('imagem.jpg');
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        background-size: cover;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="container" style="background-color: white;">
         <h1 style="text-align: center;">CRUD com PHP</h1>
         <hr>
 
         <div class="form-container">
             <?php
             $host = 'localhost';
-            $port = '3307';
+            $port = '3306';
             $dbname = 'couto_para_form';
             $username = 'root';
             $password = '';
@@ -66,7 +72,7 @@
 
                     public function insertaluno(){
                     // Verifica se a matrícula já existe
-                    $selectQuery = "SELECT matr FROM aluno WHERE matr = '$this->matricula'";
+                    $selectQuery = "SELECT matr FROM aluno WHERE matr = '" . $this->matricula . "'";
                     $result = mysqli_query($this->conexao, $selectQuery);
                     if (mysqli_num_rows($result) > 0) {
                         echo '<div class="alert alert-danger">Erro ao inserir registro de Aluno: Matrícula já existente</div>';
@@ -122,29 +128,35 @@
 
             }
 
-            // Operação de Inserção de Aluno
-            if (isset($_POST['insert_aluno'])) {
-                $Aluno = new Aluno( $_POST['matr'], $_POST['nome'], $_POST['curso'], $_POST['mes'], $_POST['ano'], $_POST['periodo'], implode(", ", $_POST['gostaDe']), $conexao) ;
-                $Aluno->insertaluno();
-            }
-
             // Operação de Leitura de Aluno
             if (isset($_POST['read_aluno'])) {
                 $Aluno = new Aluno($_POST['matr'], "", "", "", "", "", "", $conexao);
                 $Aluno->readaluno();
             }
 
-            // Operação de Atualização de Aluno
-            if (isset($_POST['update_aluno'])) {
-                $Aluno = new Aluno( $_POST['matr'], $_POST['nome'], $_POST['curso'], $_POST['mes'], $_POST['ano'], $_POST['periodo'], implode(", ", $_POST['gostaDe']), $conexao);
-                $Aluno->updatealuno();
-            }
+            // Operação de Inserção de Aluno
+if (isset($_POST['insert_aluno'])) {
+        $Aluno = new Aluno($_POST['matr'], $_POST['nome'], $_POST['curso'], $_POST['mes'], $_POST['ano'], $_POST['periodo'], implode(", ", $_POST['gostaDe']), $conexao);
+        $Aluno->insertaluno();
+        header("Location: {$_SERVER['PHP_SELF']}");
+        exit();
+}
 
-            // Operação de Exclusão de Aluno
-            if (isset($_POST['delete_aluno'])) {
-                $Aluno = new Aluno($_POST['matr'], "", "", "", "", "", "", $conexao);
-                $Aluno->deletealuno();
-            }
+// Operação de Atualização de Aluno
+if (isset($_POST['update_aluno'])) {
+    $Aluno = new Aluno($_POST['matr'], $_POST['nome'], $_POST['curso'], $_POST['mes'], $_POST['ano'], $_POST['periodo'], implode(", ", $_POST['gostaDe']), $conexao);
+    $Aluno->updatealuno();
+    header("Location: {$_SERVER['PHP_SELF']}");
+    exit();
+}
+
+// Operação de Exclusão de Aluno
+if (isset($_POST['delete_aluno'])) {
+    $Aluno = new Aluno($_POST['matr'], "", "", "", "", "", "", $conexao);
+    $Aluno->deletealuno();
+    header("Location: {$_SERVER['PHP_SELF']}");
+    exit();
+}
 
             // Listagem dos alunos existentes
             $selectAllQuery = "SELECT * FROM aluno";
@@ -168,7 +180,14 @@
                     echo '<tr>';
                     echo '<td>' . $row['matr'] . '</td>';
                     echo '<td>' . $row['nome'] . '</td>';
-                    echo '<td>' . $row['curso'] . '</td>';
+                    
+                    // Consulta para obter o nome do curso
+            $cursoId = $row['curso'];
+            $cursoQuery = "SELECT nome FROM curso_principal WHERE id = '$cursoId'";
+            $cursoResult = mysqli_query($conexao, $cursoQuery);
+            $cursoRow = mysqli_fetch_assoc($cursoResult);
+            echo '<td>' . $cursoRow['nome'] . '</td>';
+
                     echo '<td>' . $row['mes'] . '</td>';
                     echo '<td>' . $row['ano'] . '</td>';
                     echo '<td>' . $row['periodo'] . '</td>';
@@ -188,16 +207,44 @@
             <form method="post" class="mt-3">
                 <div class="form-group">
                     <label for="matricula">Matrícula</label>
-                    <input type="text" class="form-control" id="matricula" name="matr" value="<?php echo isset($Aluno->matricula) ? $Aluno->matricula : ''; ?>">
+                    <input type="text" class="form-control" id="matricula" name="matr" value="<?php echo isset($Aluno->matricula) ? $Aluno->matricula : ''; ?>"  minlength="1">
                 </div>
                 <div class="form-group">
                     <label for="nome">Nome</label>
-                    <input type="text" class="form-control" id="nome" name="nome" value="<?php echo isset($Aluno->nome) ? $Aluno->nome : ''; ?>">
+                    <input type="text" class="form-control" id="nome" name="nome" value="<?php echo isset($Aluno->nome) ? $Aluno->nome : ''; ?>"  minlength="2">
                 </div>
+
                 <div class="form-group">
-                    <label for="curso">Curso</label>
-                    <input type="text" class="form-control" id="curso" name="curso" value="<?php echo isset($Aluno->curso) ? $Aluno->curso : ''; ?>">
-                </div>
+    <label for="curso">Curso</label>
+    <select class="form-control" id="curso" name="curso" >
+        <?php
+        $host = 'localhost';
+            $port = '3306';
+            $dbname = 'couto_para_form';
+            $username = 'root';
+            $password = '';
+
+            // Conexão com o banco de dados
+            $conexao = mysqli_connect($host, $username, $password, $dbname, $port);
+            if (!$conexao) {
+                die('Falha na conexão com o banco de dados: ' . mysqli_connect_error());
+            } else {
+                echo '<div class="alert alert-success">Conexão com o banco de dados estabelecida!</div>';
+            }
+        // Consulta para obter os cursos principais
+        $cursosQuery = "SELECT id, nome FROM curso_principal";
+        $cursosResult = mysqli_query($conexao, $cursosQuery);
+
+        if (mysqli_num_rows($cursosResult) > 0) {
+            while ($curso = mysqli_fetch_assoc($cursosResult)) {
+                $selected = isset($Aluno->curso) && $Aluno->curso == $curso['id'] ? 'selected' : '';
+                echo '<option value="' . $curso['id'] . '" ' . $selected . '>' . $curso['nome'] . '</option>';
+            }
+        }
+        ?>
+    </select>
+</div>
+
                 <div class="form-group">
                     <label for="mes">Mês</label>
                     <select class="form-control" id="mes" name="mes">
@@ -219,15 +266,15 @@
                 <div class="form-group">
                     <label for="periodo">Período</label><br>
                     <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="periodo" id="periodo1" value="1" <?php echo isset($Aluno->periodo) && $Aluno->periodo == '1' ? 'checked' : ''; ?>>
+                        <input class="form-check-input" type="radio" name="periodo" id="periodo1" value="1" <?php echo isset($Aluno->periodo) && $Aluno->periodo == '1' ? 'checked' : ''; ?> >
                         <label class="form-check-label" for="periodo1">1</label>
                     </div>
                     <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="periodo" id="periodo2" value="2" <?php echo isset($Aluno->periodo) && $Aluno->periodo == '2' ? 'checked' : ''; ?>>
+                        <input class="form-check-input" type="radio" name="periodo" id="periodo2" value="2" <?php echo isset($Aluno->periodo) && $Aluno->periodo == '2' ? 'checked' : ''; ?> >
                         <label class="form-check-label" for="periodo2">2</label>
                     </div>
                     <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="periodo" id="periodo3" value="3" <?php echo isset($Aluno->periodo) && $Aluno->periodo == '3' ? 'checked' : ''; ?>>
+                        <input class="form-check-input" type="radio" name="periodo" id="periodo3" value="3" <?php echo isset($Aluno->periodo) && $Aluno->periodo == '3' ? 'checked' : ''; ?> >
                         <label class="form-check-label" for="periodo3">3</label>
                     </div>
                     <!-- Adicionar os outros períodos aqui -->
@@ -235,7 +282,7 @@
                 <div class="form-group">
                     <label for="gostaDe">Gosta de:</label>
                     <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="checkbox" name="gostaDe[]" id="gostaDe1" value="Matemática" <?php echo isset($Aluno->gostaDe) && in_array('Matemática', $Aluno->gostaDe) ? 'checked' : ''; ?>>
+                        <input class="form-check-input" type="checkbox" name="gostaDe[]" id="gostaDe1" value="Matemática" <?php echo isset($Aluno->gostaDe) && in_array('Matemática', $Aluno->gostaDe) ? 'checked' : ''; ?> >
                         <label class="form-check-label" for="gostaDe1">Matemática</label>
                     </div>
                     <div class="form-check form-check-inline">
@@ -264,6 +311,7 @@
                 </div>
                 </div>
             </form>
+            <br>
         </div>
     </div>
 </body>
@@ -274,7 +322,7 @@
         <div class="form-container">
             <?php
             $host = 'localhost';
-            $port = '3307';
+            $port = '3306';
             $dbname = 'couto_para_form';
             $username = 'root';
             $password = '';
@@ -390,11 +438,11 @@ if (isset($_POST['delete_curso'])) {
             <form method="post" class="mt-3">
                 <div class="form-group">
                     <label for="id">ID</label>
-                    <input type="text" class="form-control" id="id" name="id" value="<?php echo isset($id) ? $id : ''; ?>">
+                    <input type="text" class="form-control" id="id" name="id" value="<?php echo isset($id) ? $id : ''; ?>"  minlength="1">
                 </div>
                 <div class="form-group">
                     <label for="nome_curso">Nome do Curso</label>
-                    <input type="text" class="form-control" id="nome_curso" name="nome_curso" value="<?php echo isset($nome_curso) ? $nome_curso : ''; ?>">
+                    <input type="text" class="form-control" id="nome_curso" name="nome_curso" value="<?php echo isset($nome_curso) ? $nome_curso : ''; ?>"  minlength="5">
                 </div>
                 <div class="btn-group" role="group">
                     <button type="submit" name="insert_curso" class="btn btn-primary">Inserir Curso Principal</button>
@@ -405,5 +453,6 @@ if (isset($_POST['delete_curso'])) {
             </form>
         </div>
     </div>
+    <br>
 </body>
 </html>
