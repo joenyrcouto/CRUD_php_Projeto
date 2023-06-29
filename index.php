@@ -36,13 +36,12 @@
         <div class="form-container">
             <?php
             $host = 'localhost';
-            $port = '3306';
             $dbname = 'couto_para_form';
             $username = 'root';
             $password = '';
 
             // Conexão com o banco de dados
-            $conexao = mysqli_connect($host, $username, $password, $dbname, $port);
+            $conexao = mysqli_connect($host, $username, $password, $dbname);
             if (!$conexao) {
                 die('Falha na conexão com o banco de dados: ' . mysqli_connect_error());
             } else {
@@ -128,34 +127,54 @@
 
             }
 
-            // Operação de Leitura de Aluno
+// Operação de Leitura de Aluno
             if (isset($_POST['read_aluno'])) {
+                    // Verifica se todos os campos obrigatórios foram preenchidos
+                    if (strlen($_POST['matr']) > 0) {
                 $Aluno = new Aluno($_POST['matr'], "", "", "", "", "", "", $conexao);
                 $Aluno->readaluno();
+            } else {
+                echo '<div class="alert alert-danger">Erro ao buscar registro de Aluno: Matr deve ser preenchido</div>';
             }
+}
 
-            // Operação de Inserção de Aluno
+// Operação de Inserção de Aluno
 if (isset($_POST['insert_aluno'])) {
+    // Verifica se todos os campos obrigatórios foram preenchidos
+    if (strlen($_POST['matr']) > 0 && strlen($_POST['nome']) > 0 && strlen($_POST['curso']) > 0 && strlen($_POST['mes']) > 0 && strlen($_POST['ano']) > 0 && strlen($_POST['periodo']) > 0 && count($_POST['gostaDe']) > 0) {
         $Aluno = new Aluno($_POST['matr'], $_POST['nome'], $_POST['curso'], $_POST['mes'], $_POST['ano'], $_POST['periodo'], implode(", ", $_POST['gostaDe']), $conexao);
         $Aluno->insertaluno();
         header("Location: {$_SERVER['PHP_SELF']}");
         exit();
+    } else {
+        echo '<div class="alert alert-danger">Erro ao inserir registro de Aluno: Todos os campos devem ser preenchidos</div>';
+    }
 }
 
-// Operação de Atualização de Aluno
+// Operação de update de Aluno
 if (isset($_POST['update_aluno'])) {
-    $Aluno = new Aluno($_POST['matr'], $_POST['nome'], $_POST['curso'], $_POST['mes'], $_POST['ano'], $_POST['periodo'], implode(", ", $_POST['gostaDe']), $conexao);
-    $Aluno->updatealuno();
-    header("Location: {$_SERVER['PHP_SELF']}");
-    exit();
+    // Verifica se todos os campos obrigatórios foram preenchidos
+    if (strlen($_POST['matr']) > 0 && strlen($_POST['nome']) > 0 && strlen($_POST['curso']) > 0 && strlen($_POST['mes']) > 0 && strlen($_POST['ano']) > 0 && strlen($_POST['periodo']) > 0 && count($_POST['gostaDe']) > 0) {
+        $Aluno = new Aluno($_POST['matr'], $_POST['nome'], $_POST['curso'], $_POST['mes'], $_POST['ano'], $_POST['periodo'], implode(", ", $_POST['gostaDe']), $conexao);
+        $Aluno->updatealuno();
+        header("Location: {$_SERVER['PHP_SELF']}");
+        exit();
+    } else {
+        echo '<div class="alert alert-danger">Erro ao atualizar registro de Aluno: Todos os campos devem ser preenchidos</div>';
+    }
 }
 
 // Operação de Exclusão de Aluno
 if (isset($_POST['delete_aluno'])) {
+        // Verifica se todos os campos obrigatórios foram preenchidos
+        if (strlen($_POST['matr']) > 0) {
     $Aluno = new Aluno($_POST['matr'], "", "", "", "", "", "", $conexao);
     $Aluno->deletealuno();
     header("Location: {$_SERVER['PHP_SELF']}");
     exit();
+} else {
+    echo '<div class="alert alert-danger">Erro ao apagar registro de Aluno: Matr deve ser preenchido</div>';
+}
 }
 
             // Listagem dos alunos existentes
@@ -219,13 +238,12 @@ if (isset($_POST['delete_aluno'])) {
     <select class="form-control" id="curso" name="curso" >
         <?php
         $host = 'localhost';
-            $port = '3306';
             $dbname = 'couto_para_form';
             $username = 'root';
             $password = '';
 
             // Conexão com o banco de dados
-            $conexao = mysqli_connect($host, $username, $password, $dbname, $port);
+            $conexao = mysqli_connect($host, $username, $password, $dbname);
             if (!$conexao) {
                 die('Falha na conexão com o banco de dados: ' . mysqli_connect_error());
             } else {
@@ -322,13 +340,12 @@ if (isset($_POST['delete_aluno'])) {
         <div class="form-container">
             <?php
             $host = 'localhost';
-            $port = '3306';
             $dbname = 'couto_para_form';
             $username = 'root';
             $password = '';
 
             // Conexão com o banco de dados
-            $conexao = mysqli_connect($host, $username, $password, $dbname, $port);
+            $conexao = mysqli_connect($host, $username, $password, $dbname);
             if (!$conexao) {
                 die('Falha na conexão com o banco de dados: ' . mysqli_connect_error());
             } else {
@@ -337,6 +354,7 @@ if (isset($_POST['delete_aluno'])) {
 
             // Operação de Inserção de Curso Principal
             if (isset($_POST['insert_curso'])) {
+                if (strlen($_POST['id']) > 0 && ($_POST['nome_curso']) > 0) {
                 $id = $_POST['id'];
                 $nome_curso = $_POST['nome_curso'];
 
@@ -353,10 +371,14 @@ if (isset($_POST['delete_aluno'])) {
                         echo '<div class="alert alert-danger">Erro ao inserir registro: ' . mysqli_error($conexao) . '</div>';
                     }
                 }
+            } else {
+                echo '<div class="alert alert-danger">Erro ao inserir registro de curso: Todos os campos devem ser preenchidos</div>';
             }
+        }
 
             // Operação de Leitura de Curso Principal
             if (isset($_POST['read_curso'])) {
+                if (strlen($_POST['id']) > 0) {
                 $id = $_POST['id'];
                 $selectQuery = "SELECT nome FROM curso_principal WHERE id = '$id'";
                 $result = mysqli_query($conexao, $selectQuery);
@@ -367,10 +389,14 @@ if (isset($_POST['delete_aluno'])) {
                     echo '<div class="alert alert-warning">Registro de Curso Principal não encontrado</div>';
                     $nome_curso = "";
                 }
+            } else {
+                echo '<div class="alert alert-danger">Erro ao buscar registro de curso: Id deve ser preenchido</div>';
             }
+        }
 
             // Operação de Atualização de Curso Principal
             if (isset($_POST['update_curso'])) {
+                if (strlen($_POST['id']) > 0 && ($_POST['nome_curso']) > 0) {
                 $id = $_POST['id'];
                 $nome_curso = $_POST['nome_curso'];
                 $updateQuery = "UPDATE curso_principal SET nome = '$nome_curso' WHERE id = '$id'";
@@ -379,17 +405,21 @@ if (isset($_POST['delete_aluno'])) {
                 } else {
                     echo '<div class="alert alert-danger">Erro ao atualizar registro: ' . mysqli_error($conexao) . '</div>';
                 }
+            } else {
+                echo '<div class="alert alert-danger">Erro ao atualizar registro de curso: Todos os campos devem ser preenchidos</div>';
             }
+        }
 
             // Operação de Exclusão de Curso Principal
 if (isset($_POST['delete_curso'])) {
+    if (strlen($_POST['id']) > 0) {
     $id = $_POST['id'];
 
     // Verifica se o curso é chave estrangeira de algum aluno
-    $checkQuery = "SELECT id FROM aluno WHERE curso = '$id'";
+    $checkQuery = "SELECT curso FROM aluno WHERE curso = '$id'";
     $checkResult = mysqli_query($conexao, $checkQuery);
     if (mysqli_num_rows($checkResult) > 0) {
-        echo '<div class="alert alert-danger">Erro ao excluir registro: O curso é uma chave estrangeira em outro registro e não pode ser excluído!</div>';
+        echo '<div class="alert alert-danger">Erro ao excluir registro: O curso tem uma chave estrangeira em aluno e não pode ser excluído!</div>';
     } else {
         // Verifica se o curso é chave estrangeira de algum outro registro (outra tabela)
         // Adicione aqui a consulta para verificar outras tabelas, se necessário
@@ -402,6 +432,9 @@ if (isset($_POST['delete_curso'])) {
             echo '<div class="alert alert-danger">Erro ao excluir registro: ' . mysqli_error($conexao) . '</div>';
         }
     }
+} else {
+    echo '<div class="alert alert-danger">Erro ao deletar registro de curso: Id deve ser preenchido</div>';
+}
 }
 
 
@@ -438,11 +471,11 @@ if (isset($_POST['delete_curso'])) {
             <form method="post" class="mt-3">
                 <div class="form-group">
                     <label for="id">ID</label>
-                    <input type="text" class="form-control" id="id" name="id" value="<?php echo isset($id) ? $id : ''; ?>"  minlength="1">
+                    <input type="text" class="form-control" id="id" name="id" value="<?php echo isset($id) ? $id : ''; ?>">
                 </div>
                 <div class="form-group">
                     <label for="nome_curso">Nome do Curso</label>
-                    <input type="text" class="form-control" id="nome_curso" name="nome_curso" value="<?php echo isset($nome_curso) ? $nome_curso : ''; ?>"  minlength="5">
+                    <input type="text" class="form-control" id="nome_curso" name="nome_curso" value="<?php echo isset($nome_curso) ? $nome_curso : ''; ?>">
                 </div>
                 <div class="btn-group" role="group">
                     <button type="submit" name="insert_curso" class="btn btn-primary">Inserir Curso Principal</button>
